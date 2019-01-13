@@ -7,19 +7,16 @@ import os
 import hashlib
 import datetime
 from flask import session, abort, current_app
+import pdb
 
-# app.auth.hash_algorithm = lambda to_encrypt: original_algorithm(to_encrypt.encode('utf-8'))
-DEFAULT_HASH_ALGORITHM = hashlib.sha1
-
+DEFAULT_HASH_ALGORITHM = hashlib.sha256
 DEFAULT_USER_TIMEOUT = 3600
 
 SESSION_USER_KEY = 'auth_user'
 SESSION_LOGIN_KEY = 'auth_login'
 
-
 def _default_not_authorized():
     return abort(401)
-
 
 class Auth(object):
     """
@@ -27,14 +24,19 @@ class Auth(object):
 
     :attr not_logged_in_callback: Function to call when a user accesses a page
     without being logged in. Normally used to redirect to the login page.
+
     If a login_url_name is provided, it will by default redirect to that
     url. Otherwise, the default is abort(401).
+
     :attr not_permitted_callback: Function to call when a user tries to access
     a page for which he doesn't have the permission. Default: abort(401).
+
     :attr hash_algorithm: Algorithm from the hashlib library used for password
     encryption. Default: sha1.
+
     :attr user_timeout: Timeout (in seconds) after which the sesion of the user
     expires. Default: 3600. A timeout of 0 means it will never expire.
+
     :attr load_role: Function to load a role. Is called with user.role as only
     parameter.
     """
@@ -55,7 +57,6 @@ class Auth(object):
     def not_logged_in_handler(self, func):
         self.not_logged_in_callback = func
         return func
-
 
 class AuthUser(object):
     """
@@ -121,17 +122,14 @@ class AuthUser(object):
         user_data = get_current_user_data()
         return user_data is not None and user_data.get('username') == self.username
 
-
 def encrypt(password, salt=None, hash_algorithm=None):
     """Encrypts a password based on the hashing algorithm."""
     to_encrypt = password
-    print('to_encrypt = {}'.format(to_encrypt))
     if salt is not None:
         to_encrypt += salt
     if hash_algorithm is not None:
         return hash_algorithm(to_encrypt).hexdigest()
     return current_app.auth.hash_algorithm(to_encrypt).hexdigest()
-
 
 def login(user):
     """
@@ -141,12 +139,10 @@ def login(user):
     session[SESSION_USER_KEY] = user.__getstate__()
     session[SESSION_LOGIN_KEY] = datetime.datetime.utcnow()
 
-
 def logout():
     """Logs the currently logged in user out and returns the user data."""
     session.pop(SESSION_LOGIN_KEY, None)
     return session.pop(SESSION_USER_KEY, None)
-
 
 def get_current_user_data(apply_timeout=True):
     """
@@ -168,13 +164,11 @@ def get_current_user_data(apply_timeout=True):
         return None
     return user_data
 
-
 def not_logged_in(*args, **kwargs):
     """
     Executes not logged in callback. Not for external use.
     """
     return current_app.auth.not_logged_in_callback(*args, **kwargs)
-
 
 def login_required(func):
     """Decorator for views that require login."""

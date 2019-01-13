@@ -12,7 +12,7 @@ def init_users():
     """
     admin = AuthUser(username='admin')
     # Setting and encrypting the hardcoded password.
-    admin.set_and_encrypt_password('password', salt='123')
+    admin.set_and_encrypt_password('password')
     # Persisting users for this request.
     g.users = {'admin': admin}
 
